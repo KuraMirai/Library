@@ -2,8 +2,8 @@
 
 public class Library
 {
-    private List<Book> _books;
-    private BooksSavingService _booksSavingService;
+    private readonly List<Book> _books;
+    private readonly BooksSavingService _booksSavingService;
 
     public Library()
     {
@@ -11,105 +11,84 @@ public class Library
         _books = _booksSavingService.GetBooks();
     }
 
-    public void AddBook(Book book)
+    public bool AddBook(Book book)
     {
-        if (_books.Any(b => b.Id == book.Id))
-        {
-            Console.WriteLine($"Book with id = {book.Id} already exists and won't be added!");
-            return;
-        }
+        int newId = _books.Any() ? _books.Max(b => b.Id) + 1 : 1;
+        book = book with { Id = newId };
 
         _books.Add(book);
         _booksSavingService.SaveBooks(_books);
-        Console.WriteLine("Book was added and saved");
+
+        return true;
     }
 
-    public void RemoveBook(int id)
+    public bool RemoveBook(string query)
     {
-        var book = _books.FirstOrDefault(b => b.Id == id);
+        var book = GetBook(query);
+
         if (book == null)
-        {
-            Console.WriteLine($"Book with id = {id} does not exist!");
-            return;
-        }
+            return false;
 
         _books.Remove(book);
         _booksSavingService.SaveBooks(_books);
-        Console.WriteLine("Book was removed and collection saved");
+
+        return true;
     }
 
-    public void ShowBooks()
+    public List<Book> GetAllBooks()
     {
-        if (_books.Count == 0)
-        {
-            Console.WriteLine("There are no books yet!");
-        }
-
-        foreach (var book in _books)
-        {
-            Console.WriteLine(book);
-        }
+        return _books;
     }
 
-    public void SearchBook(string searchString)
+    public Book? GetBook(string query)
     {
-        var books = _books.Where(b =>
-            b.Title.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-            b.Author.Contains(searchString, StringComparison.OrdinalIgnoreCase)).ToList();
-
-        if (books.Count == 0)
+        if (int.TryParse(query, out var id))
         {
-            Console.WriteLine("There are no books found!");
-            return;
-        }
-
-        Console.WriteLine($"Found {books.Count} books!");
-        Console.WriteLine($"Here are the books:");
-        
-        foreach (var book in books)
-        {
-            Console.WriteLine(book);
-        }
-    }
-    
-    public void BorrowBook(int id)
-    {
-        var book = _books.FirstOrDefault(b => b.Id == id);
-        if (book == null)
-        {
-            Console.WriteLine($"Book with id = {id} does not exist!");
-            return;
-        }
-
-        if (!book.IsAvailable)
-        {
-            Console.WriteLine("Book is not available!");
-            return;
+            var byId = _books.FirstOrDefault(b => b.Id == id);
+            if (byId != null)
+                return byId;
         }
         
-        book.IsAvailable = false;
+        return _books.FirstOrDefault(b =>
+            b.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            b.Author.Contains(query, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public bool BorrowBook(string query)
+    {
+        var book = GetBook(query);
+
+        if (book is { BooksStatus: BooksStatus.Borrowed })
+        {
+            return false;
+        }
+
+        if (book != null)
+        {
+            book.BooksStatus = BooksStatus.Borrowed;
+        }
+
         _booksSavingService.SaveBooks(_books);
-        Console.WriteLine($"Book was with id = {id} was borrowed!");
+
+        return true;
     }
-    
-    public void ReturnBook(int id)
+
+    public bool ReturnBook(string query)
     {
-        var book = _books.FirstOrDefault(b => b.Id == id);
-        if (book == null)
+        var book = GetBook(query);
+
+        if (book is { BooksStatus: BooksStatus.Available })
         {
-            Console.WriteLine($"Book with id = {id} does not exist!");
-            return;
+            return false;
         }
 
-        if (book.IsAvailable)
+        if (book != null)
         {
-            Console.WriteLine("Book is already available!");
-            return;
+            book.BooksStatus = BooksStatus.Available;
         }
-        
-        book.IsAvailable = true;
+
         _booksSavingService.SaveBooks(_books);
-        Console.WriteLine($"Book was with id = {id} was returned!");
+
+        return true;
     }
-    
 }

@@ -4,13 +4,8 @@ namespace Library;
 
 public class BooksSavingService
 {
-    private readonly string _filePath = "data/books.txt";
-
-    public BooksSavingService()
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(_filePath)!);
-    }
-
+    private readonly string _filePath = "books.json";
+    
     public List<Book> GetBooks()
     {
         if (!File.Exists(_filePath))

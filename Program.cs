@@ -20,7 +20,17 @@ while (true)
     switch (input)
     {
         case "1":
-            library.ShowBooks();
+            var books = library.GetAllBooks();
+            
+            if (books.Count == 0)
+            {
+                Console.WriteLine("There are no books yet!");
+            }
+            
+            foreach (var book in books)
+            {
+                Console.WriteLine(book);
+            }
             break;
 
         case "2":
@@ -30,32 +40,49 @@ while (true)
             var author = Console.ReadLine()!;
             Console.Write("Year: ");
             int.TryParse(Console.ReadLine(), out var year);
-            Console.Write("Id: ");
-            int.TryParse(Console.ReadLine(), out var id);
-            library.AddBook(new Book(title, author, year, id));
+            library.AddBook(new Book(title, author, year));
+            Console.WriteLine("/n Book was added and saved");
             break;
 
         case "3":
             Console.Write("Enter book id for deletion: ");
-            int.TryParse(Console.ReadLine(), out var deleteId);
-            library.RemoveBook(deleteId);
+            var bookRemoved = library.RemoveBook(Console.ReadLine()!);
+
+            Console.WriteLine(bookRemoved
+                ? "Book was removed and collection saved"
+                : "Book was not removed and collection wasn't changed");
             break;
 
         case "4":
             Console.Write("Enter book title or author: ");
-            library.SearchBook(Console.ReadLine()!);
+            var foundBook = library.GetBook(Console.ReadLine()!);
+
+            if (foundBook == null)
+            {
+                Console.WriteLine("Book was not found");
+            }
+            
+            else
+            {
+                Console.WriteLine("Here is the book:");
+                Console.WriteLine(foundBook);
+            }
+
             break;
 
         case "5":
             Console.Write("Enter book id for borrow: ");
-            int.TryParse(Console.ReadLine(), out var borrowId);
-            library.BorrowBook(borrowId);
+            var borrowedBook = library.BorrowBook(Console.ReadLine()!);
+
+            Console.WriteLine(borrowedBook ? "Book is not available!" : "Book was borrowed!");
             break;
 
         case "6":
             Console.Write("Enter book id for return: ");
-            int.TryParse(Console.ReadLine(), out var returnId);
-            library.ReturnBook(returnId);
+            
+            var bookReturned = library.ReturnBook(Console.ReadLine()!);
+            Console.WriteLine(!bookReturned ? "Book is already available!" : $"Book was returned!");
+
             break;
 
         case "0":
